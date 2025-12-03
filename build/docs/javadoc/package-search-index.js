@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"ch.usi.swisscraft"},{"l":"ch.usi.swisscraft.chunk"}];updateSearchResults();

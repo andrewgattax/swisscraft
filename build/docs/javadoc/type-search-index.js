@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"ch.usi.swisscraft","l":"Swisscraft.ClientModEvents"},{"p":"ch.usi.swisscraft","l":"Config"},{"p":"ch.usi.swisscraft.chunk","l":"SwissChunkGenerator"},{"p":"ch.usi.swisscraft","l":"Swisscraft"}];updateSearchResults();
