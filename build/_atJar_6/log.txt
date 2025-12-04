@@ -1,7 +1,0 @@
-Java Launcher: /Users/francescoditullio/Library/Java/JavaVirtualMachines/corretto-17.0.16/Contents/Home/bin/java
-Arguments: '--inJar, /Users/francescoditullio/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.3-49.0.2/forge-1.20.3-49.0.2-injected.jar, --outJar, /Users/francescoditullio/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.3-49.0.2_mapped_official_1.20.3/forge-1.20.3-49.0.2_mapped_official_1.20.3.jar, --logFile, accesstransform.log, --atFile, /Users/francescoditullio/Desktop/Design101/minecraftMod/swisscraft/build/_atJar_6/parent_at.cfg'
-Classpath:
- - /Users/francescoditullio/.gradle/caches/forge_gradle/maven_downloader/net/minecraftforge/accesstransformers/8.2.1/accesstransformers-8.2.1-fatjar.jar
-Working directory: /Users/francescoditullio/Desktop/Design101/minecraftMod/swisscraft/build/_atJar_6
-Main class: net.minecraftforge.accesstransformer.TransformerProcessor
-====================================
