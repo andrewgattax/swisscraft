@@ -60,7 +60,6 @@ public class CustomChunkGenerator extends ChunkGenerator {
                     int realX = chunkX * 16 + x;
                     int realZ = chunkZ * 16 + z;
 
-                    // Generazione sinusoidale semplice
                     int height = (int) (Math.sin(realX / 10.0) * 100 +70);
 
                     for (int y = getMinY(); y <= height; y++) {
@@ -108,7 +107,7 @@ public class CustomChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getGenDepth() {
-        return 1000; // Da -64 a 320 = 384 blocchi (limiti vanilla)
+        return 384; // Da -64 a 320 = 384 blocks (vanilla limitations)
     }
 
     @Override
@@ -132,61 +131,46 @@ public class CustomChunkGenerator extends ChunkGenerator {
             return Blocks.BEDROCK.defaultBlockState();
         }
 
-        // Calcola la profondità dalla superficie
         int depth = surfaceHeight - y;
 
-        // Ghiaccio compatto sulle vette più alte (sopra 280)
         if (y >= 280 && depth <= 0) {
             return Blocks.PACKED_ICE.defaultBlockState();
         }
 
-        // Neve sulle cime alte (sopra 240)
         if (y >= 240 && depth <= 0) {
             return Blocks.SNOW_BLOCK.defaultBlockState();
         }
 
-        // Superficie: varia in base all'altezza
         if (depth == 0) {
             if (y > 280) {
-                // Ghiaccio compatto alle vette più alte
                 return Blocks.PACKED_ICE.defaultBlockState();
             } else if (y > 240) {
-                // Neve permanente
                 return Blocks.SNOW_BLOCK.defaultBlockState();
             } else if (y > 200) {
-                // Neve e pietra miste
                 return Math.sin(worldX * 0.05) > 0.3 ? Blocks.SNOW_BLOCK.defaultBlockState() : Blocks.STONE.defaultBlockState();
             } else if (y > 160) {
-                // Pietra nuda alle alte altitudini
                 return Blocks.STONE.defaultBlockState();
             } else if (y > 120) {
-                // Mix di pietra e terra rocciosa
                 return Math.sin(worldX * 0.1) > 0 ? Blocks.STONE.defaultBlockState() : Blocks.COARSE_DIRT.defaultBlockState();
             } else {
-                // Erba normale
                 return Blocks.GRASS_BLOCK.defaultBlockState();
             }
         }
 
-        // Strati di ghiaccio sotto la superficie sopra i 280
         if (y >= 280 && depth <= 5) {
             return Blocks.PACKED_ICE.defaultBlockState();
         }
 
-        // Strati di neve sotto la superficie sopra i 240
         if (y >= 240 && depth <= 5) {
             return Blocks.SNOW_BLOCK.defaultBlockState();
         }
 
-        // Strato di terra sotto l'erba (solo alle basse altitudini)
         if (depth <= 3 && y < 160) {
             return Blocks.DIRT.defaultBlockState();
         }
 
-        // Usa il rumore per variare i tipi di pietra
         double rockNoise = Math.sin(worldX * 0.1 + worldZ * 0.1) + Math.cos(worldX * 0.05);
 
-        // Rocce montane alte (sopra 200)
         if (y > 200) {
             if (rockNoise > 0.6) {
                 return Blocks.STONE.defaultBlockState();
@@ -199,7 +183,6 @@ public class CustomChunkGenerator extends ChunkGenerator {
             }
         }
 
-        // Mix di pietre alle medie altitudini (120-200)
         if (y > 120) {
             if (rockNoise > 0.5) {
                 return Blocks.ANDESITE.defaultBlockState();
@@ -210,7 +193,6 @@ public class CustomChunkGenerator extends ChunkGenerator {
             }
         }
 
-        // Mix di pietre a media altezza (40-120)
         if (y > 40) {
             if (rockNoise > 0.7) {
                 return Blocks.DIORITE.defaultBlockState();
@@ -223,12 +205,10 @@ public class CustomChunkGenerator extends ChunkGenerator {
             }
         }
 
-        // Deepslate e pietra in profondità
         if (y > 0) {
             return rockNoise > 0 ? Blocks.STONE.defaultBlockState() : Blocks.DEEPSLATE.defaultBlockState();
         }
 
-        // Tutto deepslate sotto y=0
         return Blocks.DEEPSLATE.defaultBlockState();
     }
 }
