@@ -1,6 +1,6 @@
 package ch.usi.swisscraft;
 
-import ch.usi.swisscraft.chunk.MontagneChunkGenerator;
+import ch.usi.swisscraft.chunk.CustomChunkGenerator;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
@@ -49,7 +49,7 @@ public class Swisscraft {
 
     // REGISTRAZIONE DEL GENERATORE DI CHUNK
     public static final DeferredRegister<Codec<? extends ChunkGenerator>> CHUNK_GENERATORS = DeferredRegister.create(Registries.CHUNK_GENERATOR, MODID);
-    public static final RegistryObject<Codec<MontagneChunkGenerator>> SWISS_CHUNK_GEN = CHUNK_GENERATORS.register("swiss_chunk_gen", () -> MontagneChunkGenerator.CODEC);
+    public static final RegistryObject<Codec<CustomChunkGenerator>> SWISS_CHUNK_GEN = CHUNK_GENERATORS.register("swiss_chunk_gen", () -> CustomChunkGenerator.CODEC);
 
     // Creates a new Block with the id "swisscraft:example_block", combining the namespace and path
     public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)));

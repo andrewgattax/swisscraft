@@ -17,19 +17,19 @@ import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class MontagneChunkGenerator extends ChunkGenerator {
+public class CustomChunkGenerator extends ChunkGenerator {
 
-    // Necessario per la serializzazione (salvataggio/caricamento configurazione mondo)
-    public static final Codec<MontagneChunkGenerator> CODEC = RecordCodecBuilder.create((instance) ->
+    public static final Codec<CustomChunkGenerator> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    BiomeSource.CODEC.fieldOf("biome_source").forGetter(MontagneChunkGenerator::getBiomeSource)
-            ).apply(instance, MontagneChunkGenerator::new));
+                    BiomeSource.CODEC.fieldOf("biome_source").forGetter(CustomChunkGenerator::getBiomeSource)
+            ).apply(instance, CustomChunkGenerator::new));
 
-    public MontagneChunkGenerator(BiomeSource biomeSource) {
+    public CustomChunkGenerator(BiomeSource biomeSource) {
         super(biomeSource);
     }
 
@@ -38,25 +38,53 @@ public class MontagneChunkGenerator extends ChunkGenerator {
         return CODEC;
     }
 
-    // Questo metodo determina la forma base del terreno (pietra, acqua, aria)
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(
-            java.util.concurrent.Executor executor, 
-            Blender blender, 
-            RandomState randomState, 
-            StructureManager structureManager, 
-            ChunkAccess chunk) {
-        
+    public @NotNull CompletableFuture<ChunkAccess> fillFromNoise(
+        java.util.concurrent.@NotNull Executor executor,
+        @NotNull Blender blender,
+        @NotNull RandomState randomState,
+        @NotNull StructureManager structureManager,
+        @NotNull ChunkAccess chunk) {
+
         return CompletableFuture.supplyAsync(() -> {
-            // Genera le montagne procedurali
-            generateMountains(chunk);
+            int chunkX = chunk.getPos().x;
+            int chunkZ = chunk.getPos().z;
+
+            Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
+            Heightmap worldGenHeightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
+
+            BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    int realX = chunkX * 16 + x;
+                    int realZ = chunkZ * 16 + z;
+
+                    // Generazione sinusoidale semplice
+                    int height = (int) (Math.sin(realX / 10.0) * 100 +70);
+
+                    for (int y = getMinY(); y <= height; y++) {
+                        mutablePos.set(x, y, z);
+                        BlockState block = selectBlockForPosition(y, height, realX, realZ);
+
+                        if (y == height) block = Blocks.GRASS_BLOCK.defaultBlockState();
+                        else if (y > height - 4) block = Blocks.DIRT.defaultBlockState();
+                        else if (y == getMinY()) block = Blocks.BEDROCK.defaultBlockState();
+
+                        chunk.setBlockState(mutablePos, block, false);
+                    }
+
+                    heightmap.update(x, height, z, Blocks.GRASS_BLOCK.defaultBlockState());
+                    worldGenHeightmap.update(x, height, z, Blocks.GRASS_BLOCK.defaultBlockState());
+                }
+            }
             return chunk;
         });
     }
 
     @Override
     public int getSeaLevel() {
-        return 0;
+        return 63;
     }
 
     @Override
@@ -65,9 +93,12 @@ public class MontagneChunkGenerator extends ChunkGenerator {
     }
 
     @Override
+    public int getBaseHeight(int p_223032_, int p_223033_, Heightmap.Types p_223034_, LevelHeightAccessor p_223035_, RandomState p_223036_) {
+        return 70;
+    }
+
+    @Override
     public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
-        // Solitamente usato per mettere terra/erba sopra la pietra.
-        // Se fai tutto in fillFromNoise, puoi lasciare questo vuoto o chiamare super se vuoi comportamenti vanilla parziali.
     }
 
     @Override
@@ -77,25 +108,12 @@ public class MontagneChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getGenDepth() {
-        return 384; // Da -64 a 320 = 384 blocchi (limiti vanilla)
+        return 1000; // Da -64 a 320 = 384 blocchi (limiti vanilla)
     }
 
     @Override
     public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk, GenerationStep.Carving step) {
         // Lascia vuoto per impedire la generazione di caverne standard
-    }
-    
-    // Metodi obbligatori di utilità per il calcolo delle altezze (usati dai mob spawn, strutture, ecc)
-    @Override
-    public int getBaseHeight(int x, int z, Heightmap.Types type, LevelHeightAccessor level, RandomState randomState) {
-         // Calcola l'altezza usando montagne LARGHE E MASSIVE (massimizzando vanilla)
-         double noise1 = Math.sin(x / 400.0) * Math.cos(z / 400.0);
-         double noise2 = Math.sin(x / 200.0 + 100) * Math.sin(z / 200.0);
-         double noise3 = Math.cos(x / 600.0) * Math.sin(z / 600.0);
-         double noise4 = Math.sin(x / 1000.0) * Math.cos(z / 1000.0);
-         double noise5 = Math.cos(x / 150.0) * Math.cos(z / 150.0);
-         int height = 150 + (int) (noise1 * 80 + noise2 * 60 + noise3 * 90 + noise4 * 70 + noise5 * 40);
-         return Math.max(80, Math.min(height, 310));
     }
 
     @Override
@@ -108,61 +126,6 @@ public class MontagneChunkGenerator extends ChunkGenerator {
         info.add("SwissCraft Generator");
     }
 
-    /**
-     * Genera montagne procedurali con una varietà di blocchi
-     * @param chunk Il chunk da riempire
-     */
-    private void generateMountains(ChunkAccess chunk) {
-        int chunkX = chunk.getPos().x;
-        int chunkZ = chunk.getPos().z;
-
-        Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
-        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
-
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                int realX = chunkX * 16 + x;
-                int realZ = chunkZ * 16 + z;
-
-                // Calcola l'altezza usando una combinazione di funzioni trigonometriche
-                // per creare MONTAGNE MASSIVE e LARGHE (massimizzando i limiti vanilla)
-                // Usiamo scale MOLTO più grandi per montagne più larghe e imponenti
-                double noise1 = Math.sin(realX / 400.0) * Math.cos(realZ / 400.0);       // Forma base MASSIVA
-                double noise2 = Math.sin(realX / 200.0 + 100) * Math.sin(realZ / 200.0); // Variazione media
-                double noise3 = Math.cos(realX / 600.0) * Math.sin(realZ / 600.0);       // Catene enormi
-                double noise4 = Math.sin(realX / 1000.0) * Math.cos(realZ / 1000.0);     // Catene continentali
-                double noise5 = Math.cos(realX / 150.0) * Math.cos(realZ / 150.0);       // Dettagli
-
-                // Combina i rumori per creare montagne LARGHE E ALTE che sfruttano il limite di 320
-                // Le scale più grandi creano montagne più "estese" orizzontalmente
-                int height = 150 + (int) (
-                    noise1 * 80 +    // Variazione base ampia
-                    noise2 * 60 +    // Picchi secondari
-                    noise3 * 90 +    // Catene larghe
-                    noise4 * 70 +    // Variazioni continentali
-                    noise5 * 40      // Dettagli superficie
-                );
-
-                // Limita l'altezza ai limiti vanilla (ma montagne MOLTO LARGHE)
-                height = Math.max(80, Math.min(height, 310));
-
-                // Genera la colonna di blocchi
-                for (int y = -64; y <= height; y++) {
-                    mutablePos.set(x, y, z);
-                    BlockState block = selectBlockForPosition(y, height, realX, realZ);
-                    chunk.setBlockState(mutablePos, block, false);
-                }
-
-                // Aggiorna l'heightmap
-                heightmap.update(x, height, z, chunk.getBlockState(mutablePos.set(x, height, z)));
-            }
-        }
-    }
-
-    /**
-     * Seleziona intelligentemente il tipo di blocco in base alla posizione e all'altezza
-     * Ottimizzato per altezze vanilla (fino a 320)
-     */
     private BlockState selectBlockForPosition(int y, int surfaceHeight, int worldX, int worldZ) {
         // Bedrock in fondo
         if (y <= -60) {
