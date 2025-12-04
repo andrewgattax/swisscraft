@@ -3,31 +3,40 @@ package ch.usi.swisscraft.chunk;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.CarvingMask;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.RandomSupport;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.blending.Blender;
+import net.minecraft.world.level.levelgen.carver.CarvingContext;
+import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class SwissChunkGenerator extends ChunkGenerator {
 
-    // Necessario per la serializzazione (salvataggio/caricamento configurazione mondo)
     public static final Codec<SwissChunkGenerator> CODEC = RecordCodecBuilder.create((instance) ->
-            instance.group(
-                    BiomeSource.CODEC.fieldOf("biome_source").forGetter(SwissChunkGenerator::getBiomeSource)
-            ).apply(instance, SwissChunkGenerator::new));
+        instance.group(
+            BiomeSource.CODEC.fieldOf("biome_source").forGetter(SwissChunkGenerator::getBiomeSource)
+        ).apply(instance, SwissChunkGenerator::new));
 
     public SwissChunkGenerator(BiomeSource biomeSource) {
         super(biomeSource);
@@ -38,46 +47,44 @@ public class SwissChunkGenerator extends ChunkGenerator {
         return CODEC;
     }
 
-    // Questo metodo determina la forma base del terreno (pietra, acqua, aria)
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(
-            java.util.concurrent.Executor executor, 
-            Blender blender, 
-            RandomState randomState, 
-            StructureManager structureManager, 
-            ChunkAccess chunk) {
-        
+    public @NotNull CompletableFuture<ChunkAccess> fillFromNoise(
+        java.util.concurrent.@NotNull Executor executor,
+        @NotNull Blender blender,
+        @NotNull RandomState randomState,
+        @NotNull StructureManager structureManager,
+        @NotNull ChunkAccess chunk) {
+
         return CompletableFuture.supplyAsync(() -> {
-            // Qui inserisci la tua logica PROCEDURALE
             int chunkX = chunk.getPos().x;
             int chunkZ = chunk.getPos().z;
 
             Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
-            
+            Heightmap worldGenHeightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
+
             BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
-            // Iteriamo su ogni blocco del chunk (16x16)
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     int realX = chunkX * 16 + x;
                     int realZ = chunkZ * 16 + z;
 
-                    // ESEMPIO: Generazione piatta personalizzata o basata su una tua formula matematica
-                    // Qui potresti chiamare una API esterna o usare il tuo algoritmo Noise
-                    int height = (int) (Math.sin(realX / 10.0) * 10 + 64); 
+                    // Generazione sinusoidale semplice
+                    int height = (int) (Math.sin(realX / 10.0) * 10 + 70);
 
-                    for (int y = -64; y < height; y++) {
+                    for (int y = getMinY(); y <= height; y++) {
                         mutablePos.set(x, y, z);
                         BlockState block = Blocks.STONE.defaultBlockState();
-                        
-                        if (y == height - 1) block = Blocks.GRASS_BLOCK.defaultBlockState();
-                        else if (y < 0) block = Blocks.BEDROCK.defaultBlockState();
-                        
+
+                        if (y == height) block = Blocks.GRASS_BLOCK.defaultBlockState();
+                        else if (y > height - 4) block = Blocks.DIRT.defaultBlockState();
+                        else if (y == getMinY()) block = Blocks.BEDROCK.defaultBlockState();
+
                         chunk.setBlockState(mutablePos, block, false);
                     }
-                    
-                    // Aggiorna l'heightmap (importante per spawn e luce)
+
                     heightmap.update(x, height, z, Blocks.GRASS_BLOCK.defaultBlockState());
+                    worldGenHeightmap.update(x, height, z, Blocks.GRASS_BLOCK.defaultBlockState());
                 }
             }
             return chunk;
@@ -86,44 +93,46 @@ public class SwissChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getSeaLevel() {
-        return 0;
+        return 63;
     }
 
     @Override
     public int getMinY() {
-        return 0;
+        return -64;
     }
 
     @Override
     public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
-        // Solitamente usato per mettere terra/erba sopra la pietra.
-        // Se fai tutto in fillFromNoise, puoi lasciare questo vuoto o chiamare super se vuoi comportamenti vanilla parziali.
     }
 
     @Override
     public void spawnOriginalMobs(WorldGenRegion worldGenRegion) {
-
     }
 
     @Override
     public int getGenDepth() {
-        return 0;
+        return 384;
     }
 
     @Override
     public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk, GenerationStep.Carving step) {
-        // Lascia vuoto per impedire la generazione di caverne standard
+
     }
-    
-    // Metodi obbligatori di utilità per il calcolo delle altezze (usati dai mob spawn, strutture, ecc)
+
+    private net.minecraft.world.level.levelgen.Aquifer getAquifer(ChunkAccess chunk) {
+        return net.minecraft.world.level.levelgen.Aquifer.createDisabled(
+            (x, y, z) -> new net.minecraft.world.level.levelgen.Aquifer.FluidStatus(getSeaLevel(), Blocks.WATER.defaultBlockState())
+        );
+    }
+
     @Override
     public int getBaseHeight(int x, int z, Heightmap.Types type, LevelHeightAccessor level, RandomState randomState) {
-         return 64; // Ritorna l'altezza calcolata dalla tua formula per quella X,Z
+        return 70;
     }
 
     @Override
     public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor level, RandomState randomState) {
-        return new NoiseColumn(0, new BlockState[0]); // Versione semplificata
+        return new NoiseColumn(0, new BlockState[0]);
     }
 
     @Override

@@ -1,4 +1,6 @@
-build/
-.idea/
-/run/*
+run
+.idea
 .gradle
+gradle
+build
+/build_log.txt
