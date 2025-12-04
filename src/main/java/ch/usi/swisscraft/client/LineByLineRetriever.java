@@ -20,6 +20,18 @@ public class LineByLineRetriever implements ChunkDataRetriever {
         System.out.println(heightmap);
     }
 
+    private static LineByLineRetriever INSTANCE;
+
+    private LineByLineRetriever() {}
+
+    public static LineByLineRetriever getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = new LineByLineRetriever();
+        }
+        return INSTANCE;
+    }
+
+
     public List<Integer> retrieveHeightMap(int xTopLeft, int yTopLeft, int increment) {
         int xmin = xTopLeft;
         int ymax = yTopLeft;
