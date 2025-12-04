@@ -4,3 +4,4 @@ run
 gradle
 build
 /build_log.txt
+.DS_Store
