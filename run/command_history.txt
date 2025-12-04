@@ -1,2 +1,3 @@
 /execute in swisscraft:swiss_world run tp @s ~ ~ ~
 /gamemode spectator
+/execute in swisscraft:swiss_world run tp @s ~ ~ ~
