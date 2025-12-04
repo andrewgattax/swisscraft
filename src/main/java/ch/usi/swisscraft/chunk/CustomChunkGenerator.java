@@ -1,5 +1,7 @@
 package ch.usi.swisscraft.chunk;
 
+import ch.usi.swisscraft.client.ChunkDataRetriever;
+import ch.usi.swisscraft.client.LineByLineRetriever;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
@@ -50,17 +52,23 @@ public class CustomChunkGenerator extends ChunkGenerator {
             int chunkX = chunk.getPos().x;
             int chunkZ = chunk.getPos().z;
 
+            int originXlv95 = 2717922;
+            int originYlv95 = 1096000;
+
             Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
             Heightmap worldGenHeightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
 
             BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+
+            ChunkDataRetriever chunkDataRetriever = LineByLineRetriever.getInstance();
+            List<Integer> heights = chunkDataRetriever.retrieveHeightMap(originXlv95+(chunkX * 16), originYlv95+(chunkZ * 16), 16);
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     int realX = chunkX * 16 + x;
                     int realZ = chunkZ * 16 + z;
 
-                    int height = (int) (Math.sin(realX / 10.0) * 100 +70);
+                    int height = heights.get((z * 16)+ x) - 250;
 
                     for (int y = getMinY(); y <= height; y++) {
                         mutablePos.set(x, y, z);
