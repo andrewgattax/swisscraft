@@ -30,7 +30,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.slf4j.Logger;
 import com.mojang.serialization.Codec;
-import ch.usi.swisscraft.chunk.SwissChunkGenerator;
+import ch.usi.swisscraft.chunk.AndreaSwissChunkGenerator;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(Swisscraft.MODID)
@@ -49,7 +49,7 @@ public class Swisscraft {
 
     // REGISTRAZIONE DEL GENERATORE DI CHUNK
     public static final DeferredRegister<Codec<? extends ChunkGenerator>> CHUNK_GENERATORS = DeferredRegister.create(Registries.CHUNK_GENERATOR, MODID);
-    public static final RegistryObject<Codec<SwissChunkGenerator>> SWISS_CHUNK_GEN = CHUNK_GENERATORS.register("swiss_chunk_gen", () -> SwissChunkGenerator.CODEC);
+    public static final RegistryObject<Codec<AndreaSwissChunkGenerator>> SWISS_CHUNK_GEN = CHUNK_GENERATORS.register("swiss_chunk_gen", () -> AndreaSwissChunkGenerator.CODEC);
 
     // Creates a new Block with the id "swisscraft:example_block", combining the namespace and path
     public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)));
