@@ -1,7 +1,7 @@
 package ch.usi.swisscraft.chunk;
 
 import ch.usi.swisscraft.client.ChunkDataRetriever;
-import ch.usi.swisscraft.client.LineByLineRetriever;
+import ch.usi.swisscraft.client.thread.ConcurrentLineByLineRetriever;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
@@ -36,7 +36,7 @@ public class CustomChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    protected Codec<? extends ChunkGenerator> codec() {
+    protected @NotNull Codec<? extends ChunkGenerator> codec() {
         return CODEC;
     }
 
@@ -52,15 +52,15 @@ public class CustomChunkGenerator extends ChunkGenerator {
             int chunkX = chunk.getPos().x;
             int chunkZ = chunk.getPos().z;
 
-            int originXlv95 = 2717922;
-            int originYlv95 = 1096000;
+            int originXlv95 = 2720900;
+            int originYlv95 = 1096100;
 
             Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
             Heightmap worldGenHeightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
 
             BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
-            ChunkDataRetriever chunkDataRetriever = LineByLineRetriever.getInstance();
+            ChunkDataRetriever chunkDataRetriever = ConcurrentLineByLineRetriever.instance();
             List<Integer> heights = chunkDataRetriever.retrieveHeightMap(originXlv95+(chunkX * 16), originYlv95+(chunkZ * 16), 16);
 
             for (int x = 0; x < 16; x++) {
@@ -100,16 +100,16 @@ public class CustomChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public int getBaseHeight(int p_223032_, int p_223033_, Heightmap.Types p_223034_, LevelHeightAccessor p_223035_, RandomState p_223036_) {
+    public int getBaseHeight(int p_223032_, int p_223033_, Heightmap.@NotNull Types p_223034_, @NotNull LevelHeightAccessor p_223035_, @NotNull RandomState p_223036_) {
         return 70;
     }
 
     @Override
-    public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState, ChunkAccess chunk) {
+    public void buildSurface(@NotNull WorldGenRegion region, @NotNull StructureManager structureManager, @NotNull RandomState randomState, @NotNull ChunkAccess chunk) {
     }
 
     @Override
-    public void spawnOriginalMobs(WorldGenRegion worldGenRegion) {
+    public void spawnOriginalMobs(@NotNull WorldGenRegion worldGenRegion) {
 
     }
 
@@ -119,17 +119,17 @@ public class CustomChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk, GenerationStep.Carving step) {
+    public void applyCarvers(@NotNull WorldGenRegion region, long seed, @NotNull RandomState randomState, @NotNull BiomeManager biomeManager, @NotNull StructureManager structureManager, @NotNull ChunkAccess chunk, GenerationStep.@NotNull Carving step) {
         // Lascia vuoto per impedire la generazione di caverne standard
     }
 
     @Override
-    public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor level, RandomState randomState) {
+    public @NotNull NoiseColumn getBaseColumn(int x, int z, @NotNull LevelHeightAccessor level, @NotNull RandomState randomState) {
         return new NoiseColumn(0, new BlockState[0]); // Versione semplificata
     }
 
     @Override
-    public void addDebugScreenInfo(List<String> info, RandomState randomState, BlockPos pos) {
+    public void addDebugScreenInfo(List<String> info, @NotNull RandomState randomState, @NotNull BlockPos pos) {
         info.add("SwissCraft Generator");
     }
 
